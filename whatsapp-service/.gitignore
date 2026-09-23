@@ -1,0 +1,4 @@
+node_modules/
+# whatsapp-web.js persisted session (keeps you logged in). Never commit this.
+.wwebjs_auth/
+.wwebjs_cache/

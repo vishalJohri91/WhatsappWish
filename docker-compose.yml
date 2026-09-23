@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: whatsappwish-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: whatsappwish
+      POSTGRES_USER: whatsappwish
+      POSTGRES_PASSWORD: whatsappwish
+    ports:
+      - "5432:5432"
+    volumes:
+      - whatsappwish_pgdata:/var/lib/postgresql/data
+
+volumes:
+  whatsappwish_pgdata:

@@ -1,0 +1,25 @@
+spring:
+  application:
+    name: whatsapp-wish
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/whatsappwish}
+    username: ${DB_USER:whatsappwish}
+    password: ${DB_PASSWORD:whatsappwish}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+    open-in-view: false
+
+server:
+  port: ${SERVER_PORT:8080}
+
+whatsapp:
+  service-url: ${WHATSAPP_SERVICE_URL:http://localhost:3000}
+
+logging:
+  level:
+    org.example.whatsappwish: INFO
