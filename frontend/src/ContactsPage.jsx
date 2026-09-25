@@ -86,8 +86,9 @@ export default function ContactsPage() {
 
   // Build groups: one per channel (alphabetical) plus a trailing "No channel" group,
   // each with its members sorted alphabetically. Respects the active filter.
+  const sortedChannels = useMemo(() => [...channels].sort(byName), [channels]);
+
   const groups = useMemo(() => {
-    const sortedChannels = [...channels].sort(byName);
     const result = [];
     for (const ch of sortedChannels) {
       if (filter !== "all" && filter !== String(ch.id)) continue;
@@ -101,7 +102,7 @@ export default function ContactsPage() {
       result.push({ key: "none", label: "No channel", members: unassigned });
     }
     return result;
-  }, [contacts, channels, filter]);
+  }, [contacts, sortedChannels, filter]);
 
   return (
     <div className="page">
@@ -138,7 +139,7 @@ export default function ContactsPage() {
             Channel
             <select value={form.channelId} onChange={(e) => change("channelId", e.target.value)}>
               <option value="">No channel</option>
-              {[...channels].sort(byName).map((ch) => (
+              {sortedChannels.map((ch) => (
                 <option key={ch.id} value={ch.id}>{ch.name}</option>
               ))}
             </select>
@@ -165,7 +166,7 @@ export default function ContactsPage() {
             Show
             <select value={filter} onChange={(e) => setFilter(e.target.value)}>
               <option value="all">All channels</option>
-              {[...channels].sort(byName).map((ch) => (
+              {sortedChannels.map((ch) => (
                 <option key={ch.id} value={ch.id}>{ch.name}</option>
               ))}
               <option value="none">No channel</option>

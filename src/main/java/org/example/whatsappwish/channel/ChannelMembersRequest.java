@@ -1,7 +1,9 @@
 package org.example.whatsappwish.channel;
 
+import java.util.List;
+
 /** Payload for replacing the full member list of a channel. */
 public record ChannelMembersRequest(
-        java.util.List<Long> contactIds
+        List<Long> contactIds
 ) {
 }

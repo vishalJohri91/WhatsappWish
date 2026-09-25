@@ -7,6 +7,4 @@ import java.util.Optional;
 public interface ChannelRepository extends JpaRepository<Channel, Long> {
 
     Optional<Channel> findByNameIgnoreCase(String name);
-
-    boolean existsByNameIgnoreCase(String name);
 }

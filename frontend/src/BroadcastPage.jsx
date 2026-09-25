@@ -43,7 +43,8 @@ export default function BroadcastPage() {
   function toggle(id) {
     setSelected((prev) => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
   }
@@ -57,7 +58,8 @@ export default function BroadcastPage() {
   function toggleChannel(id) {
     setSelectedChannels((prev) => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
   }
@@ -77,7 +79,7 @@ export default function BroadcastPage() {
   const resolved = resolvedRecipientIds();
   const recipientCount = resolved === null ? contacts.length : resolved.size;
 
-  // #5: channels selected that have no members.
+  // Selected channels that have no members (used to warn before sending).
   const emptySelectedChannels = channels.filter(
     (ch) => selectedChannels.has(ch.id) && ch.memberCount === 0
   );

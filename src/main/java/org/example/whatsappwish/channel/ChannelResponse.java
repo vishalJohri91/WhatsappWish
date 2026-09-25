@@ -1,5 +1,7 @@
 package org.example.whatsappwish.channel;
 
+import org.example.whatsappwish.contact.Contact;
+
 import java.time.Instant;
 import java.util.List;
 
@@ -16,7 +18,7 @@ public record ChannelResponse(
 ) {
     public static ChannelResponse from(Channel channel) {
         List<Long> ids = channel.getContacts().stream()
-                .map(c -> c.getId())
+                .map(Contact::getId)
                 .toList();
         return new ChannelResponse(
                 channel.getId(),

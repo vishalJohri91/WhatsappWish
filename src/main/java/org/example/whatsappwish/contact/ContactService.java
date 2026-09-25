@@ -4,10 +4,10 @@ import org.example.whatsappwish.channel.Channel;
 import org.example.whatsappwish.channel.ChannelRepository;
 import org.example.whatsappwish.config.NotFoundException;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
-import org.springframework.http.HttpStatus;
 
 import java.util.List;
 
@@ -38,16 +38,14 @@ public class ContactService {
     public ContactResponse create(ContactRequest request) {
         String normalized = normalizePhone(request.phoneNumber());
         if (repository.existsByPhoneNumber(normalized)) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT,
-                    "A contact with phone number " + normalized + " already exists");
+            throw phoneNumberConflict(normalized);
         }
         Contact contact = new Contact(normalized, blankToNull(request.whatsappName()), request.intendedName().trim());
         contact.setChannel(resolveChannel(request.channelId()));
         try {
             return ContactResponse.from(repository.save(contact));
         } catch (DataIntegrityViolationException e) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT,
-                    "A contact with phone number " + normalized + " already exists");
+            throw phoneNumberConflict(normalized);
         }
     }
 
@@ -57,8 +55,7 @@ public class ContactService {
         repository.findByPhoneNumber(normalized)
                 .filter(other -> !other.getId().equals(id))
                 .ifPresent(other -> {
-                    throw new ResponseStatusException(HttpStatus.CONFLICT,
-                            "A contact with phone number " + normalized + " already exists");
+                    throw phoneNumberConflict(normalized);
                 });
         contact.setPhoneNumber(normalized);
         contact.setWhatsappName(blankToNull(request.whatsappName()));
@@ -77,6 +74,11 @@ public class ContactService {
     private Contact getOrThrow(Long id) {
         return repository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Contact " + id + " not found"));
+    }
+
+    private static ResponseStatusException phoneNumberConflict(String phoneNumber) {
+        return new ResponseStatusException(HttpStatus.CONFLICT,
+                "A contact with phone number " + phoneNumber + " already exists");
     }
 
     /** Loads the channel for the given id, or null if none; rejects an unknown id. */

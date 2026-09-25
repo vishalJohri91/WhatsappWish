@@ -1,5 +1,15 @@
 # WhatsApp Wish 🎉
 
+![Java](https://img.shields.io/badge/Java-25-orange)
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5-6DB33F)
+![React](https://img.shields.io/badge/React-18-61DAFB)
+![Vite](https://img.shields.io/badge/Vite-5-646CFF)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1)
+
+> _A personal hobby project — built for fun to scratch a real itch. My more
+> substantial professional work is covered by an NDA and can't be shared publicly,
+> so this is a small, self-contained app I can walk through end to end._
+
 Send personalized festival wishes over WhatsApp. Store each contact with an
 **intended name** (e.g. real contact "Marko Ruffalo" → "Marky"), then broadcast a
 template like `Happy Diwali <Intended Name>` and everyone receives it addressed
@@ -40,6 +50,18 @@ scanning a QR code, just like WhatsApp Web), your contacts see them as ordinary,
 personal messages from you — not as some obvious mass broadcast. It's meant as a
 personal tool for a single person's own contact list, not a marketing blaster.
 
+## Screenshots
+
+The UI has three tabs — **Broadcast**, **Contacts** (grouped by channel), and
+**Channels**. Capture a PNG of each into `docs/screenshots/`, then uncomment the
+table below.
+
+<!--
+| Broadcast | Contacts | Channels |
+| --- | --- | --- |
+| ![Broadcast](docs/screenshots/broadcast.png) | ![Contacts](docs/screenshots/contacts.png) | ![Channels](docs/screenshots/channels.png) |
+-->
+
 ## Architecture
 
 ```
@@ -58,6 +80,28 @@ React (Vite)  ──HTTP──▶  Spring Boot API  ──HTTP──▶  Node wh
 > ⚠️ **Heads-up:** the sidecar automates WhatsApp Web with an unofficial library.
 > It works great for a personal tool but is against WhatsApp's Terms of Service and
 > can get a number banned if abused. Keep volumes low; a send delay is built in.
+
+## Design notes
+
+A few decisions worth calling out:
+
+- **Sidecar over reimplementation.** WhatsApp has no official personal-messaging
+  API, so a small Node service ([whatsapp-web.js](https://github.com/pedroslopez/whatsapp-web.js))
+  owns the WhatsApp Web session and the Spring Boot API talks to it over HTTP. This
+  isolates the browser-automation concern from the domain/API layer and lets each
+  side use the best-fit ecosystem.
+- **Deduplicated broadcasts.** Recipients are the union of the selected channels'
+  members and any individually selected contacts, deduplicated by contact identity
+  in one place (`BroadcastService.resolveTargets`) so nobody is messaged twice.
+- **One channel per contact.** Membership is a simple many-to-one, which keeps both
+  the UI (a single dropdown, a grouped list) and the queries straightforward.
+- **Data integrity at the edges.** The intended name is required at every layer
+  (DB `NOT NULL`, Bean Validation `@NotBlank`, and a `required` form field), and a
+  startup task purges any legacy rows that slipped through — so message rendering
+  can never produce a nameless greeting.
+- **Boring, reproducible setup.** Postgres via Docker or Homebrew, an idempotent DB
+  bootstrap script, and Hibernate `ddl-auto` for schema — enough for a personal tool
+  without migration ceremony.
 
 ## Prerequisites
 
