@@ -6,7 +6,9 @@ const SAMPLE = "Happy Diwali <Intended Name>! 🪔 Wishing you joy and prosperit
 export default function BroadcastPage() {
   const [status, setStatus] = useState(null);
   const [contacts, setContacts] = useState([]);
+  const [channels, setChannels] = useState([]);
   const [selected, setSelected] = useState(new Set());
+  const [selectedChannels, setSelectedChannels] = useState(new Set());
   const [template, setTemplate] = useState(SAMPLE);
   const [preview, setPreview] = useState(null);
   const [result, setResult] = useState(null);
@@ -21,16 +23,18 @@ export default function BroadcastPage() {
     }
   }
 
-  async function loadContacts() {
+  async function loadData() {
     try {
-      setContacts(await api.listContacts());
+      const [c, ch] = await Promise.all([api.listContacts(), api.listChannels()]);
+      setContacts(c);
+      setChannels(ch);
     } catch (e) {
       setError(e.message);
     }
   }
 
   useEffect(() => {
-    loadContacts();
+    loadData();
     refreshStatus();
     const t = setInterval(refreshStatus, 4000); // poll for QR scan / ready
     return () => clearInterval(t);
@@ -50,16 +54,47 @@ export default function BroadcastPage() {
     );
   }
 
-  function targetIds() {
-    // empty selection => send to everyone (backend treats null/empty as all)
-    return selected.size === 0 ? null : [...selected];
+  function toggleChannel(id) {
+    setSelectedChannels((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }
+
+  const nothingSelected = selected.size === 0 && selectedChannels.size === 0;
+
+  // Deduped recipient set (by contact id). null means "everyone".
+  function resolvedRecipientIds() {
+    if (nothingSelected) return null;
+    const set = new Set(selected);
+    channels.forEach((ch) => {
+      if (selectedChannels.has(ch.id)) (ch.contactIds || []).forEach((id) => set.add(id));
+    });
+    return set;
+  }
+
+  const resolved = resolvedRecipientIds();
+  const recipientCount = resolved === null ? contacts.length : resolved.size;
+
+  // #5: channels selected that have no members.
+  const emptySelectedChannels = channels.filter(
+    (ch) => selectedChannels.has(ch.id) && ch.memberCount === 0
+  );
+
+  function requestPayload() {
+    return {
+      messageTemplate: template,
+      contactIds: selected.size === 0 ? null : [...selected],
+      channelIds: selectedChannels.size === 0 ? null : [...selectedChannels],
+    };
   }
 
   async function doPreview() {
     setError(null);
     setResult(null);
     try {
-      setPreview(await api.previewBroadcast({ messageTemplate: template, contactIds: targetIds() }));
+      setPreview(await api.previewBroadcast(requestPayload()));
     } catch (e) {
       setError(e.message);
     }
@@ -67,16 +102,19 @@ export default function BroadcastPage() {
 
   async function send() {
     setError(null);
-    const count = selected.size === 0 ? contacts.length : selected.size;
-    if (count === 0) {
-      setError("No contacts to send to. Add some on the Contacts tab.");
+    if (recipientCount === 0) {
+      setError(
+        emptySelectedChannels.length > 0
+          ? "The selected channel(s) have no members. Add contacts to them first."
+          : "No contacts to send to. Add some on the Contacts tab."
+      );
       return;
     }
-    if (!confirm(`Send this message to ${count} contact(s)?`)) return;
+    if (!confirm(`Send this message to ${recipientCount} contact(s)?`)) return;
     setSending(true);
     setResult(null);
     try {
-      setResult(await api.sendBroadcast({ messageTemplate: template, contactIds: targetIds() }));
+      setResult(await api.sendBroadcast(requestPayload()));
     } catch (e) {
       setError(e.message);
     } finally {
@@ -111,6 +149,16 @@ export default function BroadcastPage() {
           value={template}
           onChange={(e) => setTemplate(e.target.value)}
         />
+        <p className="recipient-count">
+          Sending to <strong>{recipientCount}</strong> {recipientCount === 1 ? "person" : "people"}
+          {nothingSelected && " (everyone)"}
+        </p>
+        {emptySelectedChannels.length > 0 && (
+          <p className="badge warn">
+            {emptySelectedChannels.map((c) => c.name).join(", ")}{" "}
+            {emptySelectedChannels.length === 1 ? "has" : "have"} no members.
+          </p>
+        )}
         <div className="form-actions">
           <button className="btn" onClick={doPreview}>Preview</button>
           <button className="btn primary" onClick={send} disabled={sending || !ready}>
@@ -123,11 +171,33 @@ export default function BroadcastPage() {
       {error && <p className="error">{error}</p>}
 
       <section className="card">
-        <h2>Recipients</h2>
+        <h2>Channels</h2>
+        {channels.length === 0 ? (
+          <p className="muted">No channels yet. Create some on the Channels tab.</p>
+        ) : (
+          <ul className="channel-select">
+            {channels.map((ch) => (
+              <li key={ch.id}>
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={selectedChannels.has(ch.id)}
+                    onChange={() => toggleChannel(ch.id)}
+                  />
+                  {ch.name} <span className="badge">{ch.memberCount}</span>
+                </label>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <section className="card">
+        <h2>Individual recipients</h2>
         <p className="muted">
-          {selected.size === 0
+          {nothingSelected
             ? `Nothing selected — the broadcast goes to ALL ${contacts.length} contact(s).`
-            : `${selected.size} selected.`}
+            : `${recipientCount} will receive the message (duplicates removed).`}
         </p>
         {contacts.length > 0 && (
           <label className="check-all">
@@ -140,19 +210,24 @@ export default function BroadcastPage() {
           </label>
         )}
         <ul className="recipient-list">
-          {contacts.map((c) => (
-            <li key={c.id}>
-              <label>
-                <input
-                  type="checkbox"
-                  checked={selected.has(c.id)}
-                  onChange={() => toggle(c.id)}
-                />
-                <strong>{c.intendedName}</strong>{" "}
-                <span className="muted">({c.whatsappName || c.phoneNumber})</span>
-              </label>
-            </li>
-          ))}
+          {contacts.map((c) => {
+            const inSelectedChannel = c.channel && selectedChannels.has(c.channel.id);
+            return (
+              <li key={c.id} className={inSelectedChannel ? "disabled" : ""}>
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={inSelectedChannel || selected.has(c.id)}
+                    disabled={inSelectedChannel}
+                    onChange={() => toggle(c.id)}
+                  />
+                  <strong>{c.intendedName}</strong>{" "}
+                  <span className="muted">({c.whatsappName || c.phoneNumber})</span>
+                  {inSelectedChannel && <span className="chip">in {c.channel.name}</span>}
+                </label>
+              </li>
+            );
+          })}
         </ul>
       </section>
 

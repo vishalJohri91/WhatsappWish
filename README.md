@@ -23,11 +23,17 @@ Here's the idea in everyday terms:
 - **Write one greeting with a blank for the name.** Compose something like
   `Happy Diwali <Intended Name>! Wishing you a wonderful year ahead.` The
   `<Intended Name>` part is a placeholder that gets swapped out per person.
+- **Group people into channels.** Put contacts into a channel like *Family*,
+  *Friends*, or *Colleagues* (each contact belongs to at most one channel). Then
+  you can wish a whole channel at once instead of ticking people one by one.
 - **Preview before you send.** See exactly how the message will read for each
   contact, so there are no surprises.
-- **Send to everyone (or a chosen few) at once.** Each person receives a message
-  that looks like it was written just for them — "Happy Diwali Marky!",
-  "Happy Diwali Mom!", and so on — sent from **your own** WhatsApp account.
+- **Send to everyone, a channel, or a chosen few — no double-texting.** Pick any
+  mix of channels and individual people; if someone is covered twice (say they're
+  in a selected channel *and* ticked individually), they still get the message
+  only once. Each person receives a message that looks like it was written just
+  for them — "Happy Diwali Marky!", "Happy Diwali Mom!" — sent from **your own**
+  WhatsApp account.
 
 Because the messages go out through your normal WhatsApp (you connect it once by
 scanning a QR code, just like WhatsApp Web), your contacts see them as ordinary,
@@ -41,13 +47,13 @@ React (Vite)  ──HTTP──▶  Spring Boot API  ──HTTP──▶  Node wh
   frontend/                 (root, :8080)              whatsapp-service/ (:3000)
                                  │
                                  ▼
-                            PostgreSQL (:5432)  ← contacts + intended names
+                            PostgreSQL (:5432)  ← contacts, channels + intended names
 ```
 
-- **frontend/** — React UI: manage contacts, compose/preview/send broadcasts, show WhatsApp QR + status.
+- **frontend/** — React UI: manage contacts and channels, compose/preview/send broadcasts, show WhatsApp QR + status.
 - **root (Spring Boot)** — REST API, Postgres persistence, per-contact name substitution.
 - **whatsapp-service/** — Node service using [whatsapp-web.js](https://github.com/pedroslopez/whatsapp-web.js). Owns the WhatsApp Web session (QR login with **your** number) and does the actual sending.
-- **PostgreSQL** — stores contacts.
+- **PostgreSQL** — stores contacts and channels.
 
 > ⚠️ **Heads-up:** the sidecar automates WhatsApp Web with an unofficial library.
 > It works great for a personal tool but is against WhatsApp's Terms of Service and
@@ -107,10 +113,30 @@ Open http://localhost:5173.
 ## How to use
 
 1. **Contacts tab** — add contacts: phone number (with country code), optional real
-   name, and the **intended name** to address them by.
-2. **Broadcast tab** — check the WhatsApp connection (scan the QR if prompted),
-   write a message using `<Intended Name>` where the name should go, **Preview** to
-   check rendering, then **Send broadcast**. Leave everyone unselected to send to all.
+   name, the **intended name** to address them by (required), and optionally the
+   **channel** they belong to. The list is grouped by channel (channels A→Z,
+   members A→Z, with a "No channel" group last) and has a filter to view one
+   channel at a time.
+2. **Channels tab** — create, rename, and delete channels. Open **Members** on a
+   channel to see who's in it, remove members, or add a contact (adding someone
+   who's already in another channel moves them). Deleting a channel never deletes
+   the contacts — they just become unassigned.
+3. **Broadcast tab** — check the WhatsApp connection (scan the QR if prompted),
+   write a message using `<Intended Name>` where the name should go. Pick any mix
+   of **channels** and **individual contacts**; the running recipient count is
+   deduplicated, and anyone already covered by a selected channel is greyed out in
+   the individual list. **Preview** to check rendering, then **Send broadcast**.
+   Leave everything unselected to send to all.
+
+## Channels
+
+- A channel is a named group of contacts (e.g. *Family*, *Friends*, *Colleagues*).
+  **Fresh databases are seeded with those three;** after that they're fully
+  editable.
+- A contact belongs to **at most one** channel (or none).
+- When broadcasting, recipients are the **union** of the selected channels' members
+  and any individually selected contacts, **deduplicated by contact** — nobody gets
+  the same message twice.
 
 ## Message placeholders
 
@@ -135,10 +161,19 @@ Sidecar: `PORT` (default 3000), `SEND_DELAY_MS` (default 1500).
 
 | Method | Path | Purpose |
 | --- | --- | --- |
-| GET | `/api/contacts` | list contacts |
-| POST | `/api/contacts` | create contact |
-| PUT | `/api/contacts/{id}` | update contact |
+| GET | `/api/contacts` | list contacts (each with its channel) |
+| POST | `/api/contacts` | create contact (optional `channelId`) |
+| PUT | `/api/contacts/{id}` | update contact (optional `channelId`) |
 | DELETE | `/api/contacts/{id}` | delete contact |
+| GET | `/api/channels` | list channels (with member count + member ids) |
+| GET | `/api/channels/{id}` | get one channel |
+| POST | `/api/channels` | create channel |
+| PUT | `/api/channels/{id}` | rename channel |
+| PUT | `/api/channels/{id}/contacts` | set a channel's full member list |
+| DELETE | `/api/channels/{id}` | delete channel (contacts kept) |
 | GET | `/api/whatsapp/status` | WhatsApp status + QR |
 | POST | `/api/broadcast/preview` | render per-contact, no send |
-| POST | `/api/broadcast` | send to selected (or all) contacts |
+| POST | `/api/broadcast` | send to selected contacts/channels (or all) |
+
+Both broadcast endpoints accept `contactIds` and `channelIds`; leaving both empty
+targets all contacts.

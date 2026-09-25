@@ -1,5 +1,7 @@
 package org.example.whatsappwish.contact;
 
+import org.example.whatsappwish.channel.Channel;
+import org.example.whatsappwish.channel.ChannelRepository;
 import org.example.whatsappwish.config.NotFoundException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
@@ -14,9 +16,11 @@ import java.util.List;
 public class ContactService {
 
     private final ContactRepository repository;
+    private final ChannelRepository channelRepository;
 
-    public ContactService(ContactRepository repository) {
+    public ContactService(ContactRepository repository, ChannelRepository channelRepository) {
         this.repository = repository;
+        this.channelRepository = channelRepository;
     }
 
     @Transactional(readOnly = true)
@@ -38,6 +42,7 @@ public class ContactService {
                     "A contact with phone number " + normalized + " already exists");
         }
         Contact contact = new Contact(normalized, blankToNull(request.whatsappName()), request.intendedName().trim());
+        contact.setChannel(resolveChannel(request.channelId()));
         try {
             return ContactResponse.from(repository.save(contact));
         } catch (DataIntegrityViolationException e) {
@@ -58,6 +63,7 @@ public class ContactService {
         contact.setPhoneNumber(normalized);
         contact.setWhatsappName(blankToNull(request.whatsappName()));
         contact.setIntendedName(request.intendedName().trim());
+        contact.setChannel(resolveChannel(request.channelId()));
         return ContactResponse.from(contact);
     }
 
@@ -71,6 +77,16 @@ public class ContactService {
     private Contact getOrThrow(Long id) {
         return repository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Contact " + id + " not found"));
+    }
+
+    /** Loads the channel for the given id, or null if none; rejects an unknown id. */
+    private Channel resolveChannel(Long channelId) {
+        if (channelId == null) {
+            return null;
+        }
+        return channelRepository.findById(channelId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "channelId " + channelId + " is invalid"));
     }
 
     /** Strips spaces, dashes, parentheses and a leading "+" so numbers store consistently. */

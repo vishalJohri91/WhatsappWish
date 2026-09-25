@@ -12,6 +12,9 @@ public record ContactRequest(
         String whatsappName,
 
         @NotBlank(message = "intendedName is required")
-        String intendedName
+        String intendedName,
+
+        /** Optional: id of the single channel this contact should belong to (null = none). */
+        Long channelId
 ) {
 }

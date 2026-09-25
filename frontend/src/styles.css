@@ -55,7 +55,7 @@ body {
 
 .form { display: flex; flex-direction: column; gap: 12px; }
 label { display: flex; flex-direction: column; gap: 4px; font-size: 14px; color: var(--muted); }
-input, textarea {
+input, textarea, select {
   font: inherit;
   padding: 10px 12px;
   border: 1px solid var(--border);
@@ -63,7 +63,7 @@ input, textarea {
   color: var(--text);
   background: #fff;
 }
-input:focus, textarea:focus { outline: 2px solid var(--green); border-color: var(--green); }
+input:focus, textarea:focus, select:focus { outline: 2px solid var(--green); border-color: var(--green); }
 .template { resize: vertical; }
 
 .form-actions { display: flex; gap: 8px; margin-top: 4px; }
@@ -105,3 +105,52 @@ input:focus, textarea:focus { outline: 2px solid var(--green); border-color: var
 .check-all { flex-direction: row; align-items: center; gap: 8px; color: var(--text); font-weight: 600; }
 
 code { background: #f0f2f5; padding: 1px 5px; border-radius: 4px; font-size: 13px; }
+
+/* Channels */
+.chips { display: inline-flex; flex-wrap: wrap; gap: 4px; }
+.chip {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  background: #e7f7ec;
+  color: var(--green-dark);
+  margin-left: 6px;
+}
+
+.form.inline { flex-direction: row; align-items: center; gap: 8px; }
+.form.inline input { flex: 1; }
+
+.channel-picker { border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; }
+.channel-picker legend { font-size: 14px; color: var(--muted); padding: 0 4px; }
+.channel-checks { display: flex; flex-wrap: wrap; gap: 12px; }
+.channel-check { flex-direction: row; align-items: center; gap: 6px; color: var(--text); cursor: pointer; }
+
+.channel-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; }
+.channel-row { border: 1px solid var(--border); border-radius: 8px; padding: 12px; }
+.channel-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.channel-name { flex: 1; }
+.member-editor { margin-top: 12px; border-top: 1px solid var(--border); padding-top: 12px; }
+.member-list { list-style: none; padding: 0; margin: 0 0 12px; display: flex; flex-direction: column; gap: 6px; }
+.member-list li { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.add-member { flex-direction: row; align-items: center; gap: 8px; }
+.add-member select { flex: 1; }
+
+.channel-select { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 12px; }
+.channel-select label { flex-direction: row; align-items: center; gap: 6px; color: var(--text); cursor: pointer; }
+
+.recipient-count { font-size: 15px; margin: 8px 0 0; }
+
+/* Grouped contacts list + filter */
+.card-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.card-head h2 { margin: 0; }
+.filter { flex-direction: row; align-items: center; gap: 6px; }
+.contact-group { margin-top: 16px; }
+.contact-group:first-of-type { margin-top: 8px; }
+.group-head { font-size: 15px; margin: 0 0 6px; display: flex; align-items: center; gap: 8px; }
+
+/* Greyed-out recipients already covered by a selected channel */
+.recipient-list li.disabled { opacity: 0.5; }
+.recipient-list li.disabled label { cursor: not-allowed; }
+

@@ -26,6 +26,15 @@ export const api = {
     request(`/contacts/${id}`, { method: "PUT", body: JSON.stringify(data) }),
   deleteContact: (id) => request(`/contacts/${id}`, { method: "DELETE" }),
 
+  listChannels: () => request("/channels"),
+  getChannel: (id) => request(`/channels/${id}`),
+  createChannel: (data) => request("/channels", { method: "POST", body: JSON.stringify(data) }),
+  updateChannel: (id, data) =>
+    request(`/channels/${id}`, { method: "PUT", body: JSON.stringify(data) }),
+  deleteChannel: (id) => request(`/channels/${id}`, { method: "DELETE" }),
+  setChannelContacts: (id, contactIds) =>
+    request(`/channels/${id}/contacts`, { method: "PUT", body: JSON.stringify({ contactIds }) }),
+
   whatsappStatus: () => request("/whatsapp/status"),
   previewBroadcast: (data) =>
     request("/broadcast/preview", { method: "POST", body: JSON.stringify(data) }),

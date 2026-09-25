@@ -5,13 +5,16 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import org.example.whatsappwish.channel.Channel;
 
 import java.time.Instant;
 
 /**
  * A WhatsApp contact together with the "intended name" the user wants to
- * address them by in wishes (e.g. real contact "Lalita Johri" -> "Mummy").
+ * address them by in wishes (e.g. real contact "Marko Ruffalo" -> "Marky").
  */
 @Entity
 @Table(name = "contacts")
@@ -28,12 +31,17 @@ public class Contact {
     /** The actual name of the contact in the phone book, optional. */
     private String whatsappName;
 
-    /** The name to address them by in wishes, e.g. "Mummy". */
+    /** The name to address them by in wishes, e.g. "Marky". */
     @Column(nullable = false)
     private String intendedName;
 
     @Column(nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
+
+    /** The single channel this contact belongs to, or {@code null} if none. */
+    @ManyToOne
+    @JoinColumn(name = "channel_id")
+    private Channel channel;
 
     protected Contact() {
         // for JPA
@@ -75,5 +83,13 @@ public class Contact {
 
     public Instant getCreatedAt() {
         return createdAt;
+    }
+
+    public Channel getChannel() {
+        return channel;
+    }
+
+    public void setChannel(Channel channel) {
+        this.channel = channel;
     }
 }
