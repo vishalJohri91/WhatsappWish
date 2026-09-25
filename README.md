@@ -52,10 +52,6 @@ personal tool for a single person's own contact list, not a marketing blaster.
 
 ## Screenshots
 
-The UI has three tabs — **Broadcast**, **Contacts** (grouped by channel), and
-**Channels**. Capture a PNG of each into `docs/screenshots/`, then uncomment the
-table below.
-
 <!--
 | Broadcast | Contacts | Channels |
 | --- | --- | --- |
