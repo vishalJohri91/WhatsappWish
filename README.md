@@ -1,9 +1,38 @@
 # WhatsApp Wish 🎉
 
 Send personalized festival wishes over WhatsApp. Store each contact with an
-**intended name** (e.g. real contact "Lalita Johri" → "Mummy"), then broadcast a
+**intended name** (e.g. real contact "Marko Ruffalo" → "Marky"), then broadcast a
 template like `Happy Diwali <Intended Name>` and everyone receives it addressed
 to their intended name.
+
+## What this does
+
+Around festivals and special occasions, most of us want to wish a long list of
+friends and family — but copy-pasting the same message to dozens of people feels
+impersonal, and typing each one by hand takes forever. WhatsApp Wish solves that:
+you write **one** message once, and it goes out to everyone individually, each
+person greeted by the exact name you'd normally call them.
+
+Here's the idea in everyday terms:
+
+- **Keep an address book.** Save the people you want to wish. For each person you
+  store their phone number, optionally their real name, and — most importantly —
+  the **name you actually address them by** (their "intended name"). So "Marko
+  Ruffalo" might be saved as "Marky", a parent might be "Mom", a friend as a
+  nickname, and so on.
+- **Write one greeting with a blank for the name.** Compose something like
+  `Happy Diwali <Intended Name>! Wishing you a wonderful year ahead.` The
+  `<Intended Name>` part is a placeholder that gets swapped out per person.
+- **Preview before you send.** See exactly how the message will read for each
+  contact, so there are no surprises.
+- **Send to everyone (or a chosen few) at once.** Each person receives a message
+  that looks like it was written just for them — "Happy Diwali Marky!",
+  "Happy Diwali Mom!", and so on — sent from **your own** WhatsApp account.
+
+Because the messages go out through your normal WhatsApp (you connect it once by
+scanning a QR code, just like WhatsApp Web), your contacts see them as ordinary,
+personal messages from you — not as some obvious mass broadcast. It's meant as a
+personal tool for a single person's own contact list, not a marketing blaster.
 
 ## Architecture
 
